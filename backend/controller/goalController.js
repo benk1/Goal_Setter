@@ -1,11 +1,14 @@
 const Joi = require('joi');
 const asyncHandler = require('express-async-handler');
+const Goal = require('../models/goalModel');
+
 //@desc Get goals
 //@route GET  /api/goals
 //@access Private
-const getGoals = async (req, res) => {
-	res.status(200).send({ message: 'Get goals' });
-};
+const getGoals = asyncHandler(async (req, res) => {
+	const goals = await Goal.find();
+	res.send(goals);
+});
 
 //@desc Create goals
 //@route POST  /api/goals
@@ -16,13 +19,11 @@ const createGoal = asyncHandler(async (req, res) => {
 		res.status(400).send(error.details[0].message);
 		return;
 	}
-	const result = schema.validate(req.body);
-	console.log(result);
-	if (result.error) {
-		res.status(400).send(result.error.details[0].message);
-		return;
-	}
-	res.status(200).send({ message: 'Create goal' });
+
+	const goal = await Goal.create({
+		text: req.body.text,
+	});
+	res.send(goal);
 });
 
 //@desc Update goals
@@ -30,12 +31,19 @@ const createGoal = asyncHandler(async (req, res) => {
 //@access Private
 const updateGoal = asyncHandler(async (req, res) => {
 	const id = req.params.id;
+	const goal = await Goal.findById(id);
+	if (!goal) {
+		return res.status(404).send('The Goal with the given ID was not found!!');
+	}
 	const { error } = validateGoal(req.body);
 	if (error) {
 		res.status(400).send(error.details[0].message);
 		return;
 	}
-	res.status(200).send({ message: `Update goal ${id}` });
+	const updatedGoal = await Goal.findByIdAndUpdate(id, req.body, {
+		new: true,
+	});
+	res.send(updatedGoal);
 });
 
 //@desc Delete goal
@@ -44,13 +52,17 @@ const updateGoal = asyncHandler(async (req, res) => {
 const deleteGoal = asyncHandler(async (req, res) => {
 	const id = req.params.id;
 
-	res.status(200).send({ message: `Update goal ${id}` });
-	res.status(200).send({ message: `Delete goal ${id}` });
+	const goal = await Goal.findById(id);
+	if (!goal) {
+		return res.status(404).send('The Goal with the given ID was not found!!');
+	}
+	await goal.remove();
+	res.send({ id: id });
 });
 
 function validateGoal(goal) {
 	const schema = Joi.object({
-		name: Joi.string().min(3).required(),
+		text: Joi.string().min(3).required(),
 	});
 
 	return schema.validate(goal);
