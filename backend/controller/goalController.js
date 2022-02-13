@@ -1,6 +1,8 @@
 const Joi = require('joi');
 const asyncHandler = require('express-async-handler');
 const Goal = require('../models/goalModel');
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 //@desc Get goals
 //@route GET  /api/goals
@@ -13,7 +15,7 @@ const getGoals = asyncHandler(async (req, res) => {
 //@desc Create goals
 //@route POST  /api/goals
 //@access Private
-const createGoal = asyncHandler(async (req, res) => {
+const createGoal = asyncHandler([auth, admin], async (req, res) => {
 	const { error } = validateGoal(req.body);
 	if (error) {
 		res.status(400).send(error.details[0].message);

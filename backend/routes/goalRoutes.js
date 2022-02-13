@@ -5,10 +5,11 @@ const {
 	updateGoal,
 	deleteGoal,
 } = require('../controller/goalController');
+const auth = require('../middleware/auth');
 const router = express.Router();
 
-router.route('/').get(getGoals).post(createGoal);
-router.route('/:id').put(updateGoal).delete(deleteGoal);
+router.route('/').get(auth, getGoals).post(auth, createGoal);
+router.route('/:id').put(auth, updateGoal).delete(auth, deleteGoal);
 
 // router.get('/', getGoals);  //We chain get and post together  above
 
